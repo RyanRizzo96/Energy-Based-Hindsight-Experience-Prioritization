@@ -59,6 +59,17 @@ DEFAULT_PARAMS = {
     'demo_batch_size': 128,  # number of samples to be used from the demonstrations buffer, per mpi thread 128/1024 or 32/256
     'prm_loss_weight': 0.001,  # Weight corresponding to the primary loss
     'aux_loss_weight':  0.0078,  # Weight corresponding to the auxilliary loss also called the cloning loss
+
+    # prioritized_replay (tderror)
+    'alpha': 0.6,  # 0.6
+    'beta0': 0.4,  # 0.4
+    'beta_iters': None,  # None
+    'eps': 1e-6,
+
+    # energy-based prioritization
+    'w_potential': 1.0,
+    'w_linear': 1.0,
+    'w_rotational': 1.0,
 }
 
 
@@ -128,7 +139,8 @@ def prepare_params(kwargs):
                  'polyak',
                  'batch_size', 'Q_lr', 'pi_lr',
                  'norm_eps', 'norm_clip', 'action_scale',
-                 'action_l2', 'clip_obs', 'scope', 'relative_goals']:
+                 'action_l2', 'clip_obs', 'scope', 'relative_goals',
+                 'alpha', 'beta0', 'beta_iters', 'eps']:
         ddpg_params[name] = kwargs[name]
         kwargs['_' + name] = kwargs[name]
         del kwargs[name]
