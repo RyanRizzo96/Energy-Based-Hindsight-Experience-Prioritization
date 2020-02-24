@@ -298,9 +298,9 @@ class DDPG(object):
                     rolloutV.append(v.tolist())
                 transitions[k] = np.array(rolloutV)
         else:
-            print("sampling batch")
+            # print("sampling batch")
             transitions = self.buffer.sample(self.batch_size)  # otherwise only sample from primary buffer
-            print("end sampling batch")
+            # print("end sampling batch")
 
         o, o_2, g = transitions['o'], transitions['o_2'], transitions['g']
         ag, ag_2 = transitions['ag'], transitions['ag_2']

@@ -65,7 +65,7 @@ class ReplayBuffer:
     def sample(self, batch_size):
         """Returns a dict {key: array(batch_size x shapes[key])}
         """
-        print("start replay buffer sample batch")
+        # print("start replay buffer sample batch")
         buffers = {}
 
         with self.lock:
@@ -77,7 +77,7 @@ class ReplayBuffer:
         buffers['ag_2'] = buffers['ag'][:, 1:, :]
 
         transitions = self.sample_transitions(buffers, batch_size)
-        print("end replay buffer sample batch")
+        # print("end replay buffer sample batch")
         for key in (['r', 'o_2', 'ag_2'] + list(self.buffers.keys())):
             assert key in transitions, "key %s missing from transitions" % key
 

@@ -25,7 +25,7 @@ def make_sample_her_transitions(replay_strategy, replay_k, reward_fun):
         """
         T = episode_batch['u'].shape[1]     # 49
 
-        print("START HER Samlper ")
+        # print("START HER Samlper ")
         # print("episode_batch['u'] ", episode_batch['u'])
         # print("T: ", T)
 
@@ -73,7 +73,7 @@ def make_sample_her_transitions(replay_strategy, replay_k, reward_fun):
 
         assert(transitions['u'].shape[0] == batch_size_in_transitions)
 
-        print("END HER Samlper ")
+        # print("END HER Samlper ")
         return transitions
 
     return _sample_her_transitions
