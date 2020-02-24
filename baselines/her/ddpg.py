@@ -26,7 +26,7 @@ class DDPG(object):
                  Q_lr, pi_lr, norm_eps, norm_clip, action_scale, action_l2, clip_obs, scope, T,
                  rollout_batch_size, subtract_goals, relative_goals, clip_pos_returns, clip_return,
                  bc_loss, q_filter, num_demo, demo_batch_size, prm_loss_weight, aux_loss_weight,
-                 sample_transitions, gamma, reuse=False, **kwargs):
+                 sample_transitions, gamma, temperature, prioritization, rank_method, reuse=False, **kwargs):
         """
             Implementation of DDPG that is used in combination with Hindsight Experience Replay (HER).
             Added functionality to use demonstrations for training to Overcome exploration problem.
@@ -79,6 +79,11 @@ class DDPG(object):
         self.actor_loss_episode = []
         self.critic_loss_avg = []
         self.actor_loss_avg = []
+        
+        # Energy based parameters
+        self.prioritization = prioritization
+        self.temperature = temperature
+        self.rank_method = rank_method
 
         # Prepare staging area for feeding data to the model.
         stage_shapes = OrderedDict()
@@ -252,7 +257,14 @@ class DDPG(object):
             num_normalizing_transitions = transitions_in_episode_batch(episode_batch)
             # print("START ddpg sample transition")
             # n_cycles calls HER sampler
-            transitions = self.sample_transitions(episode_batch, num_normalizing_transitions)
+            if self.prioritization == 'energy':
+                if not self.buffer.current_size == 0 and not len(episode_batch['ag']) == 0:
+                    transitions = self.sample_transitions(episode_batch, num_normalizing_transitions, 'none', 1.0, True)
+            elif self.prioritization == 'tderror':
+                transitions, weights, episode_idxs = \
+                    self.sample_transitions(self.buffer, episode_batch, num_normalizing_transitions, beta=0)
+            else:
+                transitions = self.sample_transitions(episode_batch, num_normalizing_transitions)
             # print("END ddpg sample transition")
 
             o, g, ag = transitions['o'], transitions['g'], transitions['ag']
@@ -287,20 +299,14 @@ class DDPG(object):
         self.actor_optimiser.update(actor_grads, self.pi_lr)
 
     def sample_batch(self):
-        if self.bc_loss:  # use demonstration buffer to sample as well if bc_loss flag is set TRUE
-            print("Using demonstration buffer samples")
-            transitions = self.buffer.sample(self.batch_size - self.demo_batch_size)
-            global DEMO_BUFFER
-            transitions_demo = DEMO_BUFFER.sample(self.demo_batch_size)  # sample from the demo buffer
-            for k, values in transitions_demo.items():
-                rolloutV = transitions[k].tolist()
-                for v in values:
-                    rolloutV.append(v.tolist())
-                transitions[k] = np.array(rolloutV)
+        if self.prioritization == 'energy':
+            transitions = self.buffer.sample(self.batch_size, self.rank_method, temperature=self.temperature)
+            weights = np.ones_like(transitions['r']).copy()
+        elif self.prioritization == 'tderror':
+            transitions, weights, idxs = self.buffer.sample(self.batch_size, beta=self.beta_schedule.value(t))
         else:
-            # print("sampling batch")
-            transitions = self.buffer.sample(self.batch_size)  # otherwise only sample from primary buffer
-            # print("end sampling batch")
+            transitions = self.buffer.sample(self.batch_size)
+            weights = np.ones_like(transitions['r']).copy()
 
         o, o_2, g = transitions['o'], transitions['o_2'], transitions['g']
         ag, ag_2 = transitions['ag'], transitions['ag_2']

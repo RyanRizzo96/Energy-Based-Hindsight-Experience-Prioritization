@@ -78,6 +78,7 @@ def make_sample_her_transitions(replay_strategy, replay_k, reward_fun):
 
     return _sample_her_transitions
 
+
 def make_sample_her_transitions_energy(replay_strategy, replay_k, reward_fun):
 
     if (replay_strategy == 'future') or (replay_strategy == 'final'):

@@ -116,6 +116,9 @@ def learn(*, network, env, total_timesteps,
           override_params=None,
           load_path=None,
           save_path=None,
+          temperature=1.0,
+          prioritization='none',
+          rank_method='none',
           **kwargs
           ):
 
@@ -140,6 +143,9 @@ def learn(*, network, env, total_timesteps,
     env_name = env.spec.id  # Unwrap the environment and get the id, Eg: CartPole-v0
     params['env_name'] = env_name  # Save env_name as a param
     params['replay_strategy'] = replay_strategy  # Add replay_strategy as param
+    params['temperature'] = temperature
+    params['prioritization'] = prioritization
+    params['rank_method'] = rank_method
 
     if env_name in config.DEFAULT_ENV_PARAMS:
         params.update(config.DEFAULT_ENV_PARAMS[env_name])  # merge env-specific parameters in

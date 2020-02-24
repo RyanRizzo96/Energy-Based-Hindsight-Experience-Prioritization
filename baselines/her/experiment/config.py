@@ -4,7 +4,9 @@ import gym
 
 from baselines import logger
 from baselines.her.ddpg import DDPG
-from baselines.her.her_sampler import make_sample_her_transitions
+from baselines.her.her_sampler import make_sample_her_transitions, \
+                                      make_sample_her_transitions_energy, \
+                                      make_sample_her_transitions_prioritized_replay
 from baselines.bench.monitor import Monitor
 
 DEFAULT_ENV_PARAMS = {
@@ -171,7 +173,13 @@ def configure_her(params):
         her_params[name] = params[name]
         params['_' + name] = her_params[name]
         del params[name]
-    sample_her_transitions = make_sample_her_transitions(**her_params)
+
+    if params['prioritization'] == 'energy':
+        sample_her_transitions = make_sample_her_transitions_energy(**her_params)
+    elif params['prioritization'] == 'tderror':
+        sample_her_transitions = make_sample_her_transitions_prioritized_replay(**her_params)
+    else:
+        sample_her_transitions = make_sample_her_transitions(**her_params)
 
     return sample_her_transitions
 
@@ -187,6 +195,9 @@ def configure_ddpg(dims, params, reuse=False, use_mpi=True, clip_return=True):
     gamma = params['gamma']
     rollout_batch_size = params['rollout_batch_size']
     ddpg_params = params['ddpg_params']
+    temperature = params['temperature']
+    prioritization = params['prioritization']
+    rank_method = params['rank_method']
 
     input_dims = dims.copy()
 
@@ -207,6 +218,9 @@ def configure_ddpg(dims, params, reuse=False, use_mpi=True, clip_return=True):
                         'demo_batch_size': params['demo_batch_size'],
                         'prm_loss_weight': params['prm_loss_weight'],
                         'aux_loss_weight': params['aux_loss_weight'],
+                        'temperature': temperature,
+                        'prioritization': prioritization,
+                        'rank_method': rank_method,
                         })
     ddpg_params['info'] = {
         'env_name': params['env_name'],

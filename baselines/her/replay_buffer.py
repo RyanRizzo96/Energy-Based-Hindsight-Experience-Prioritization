@@ -139,6 +139,7 @@ class ReplayBuffer:
             idx = idx[0]
         return idx
 
+
 class ReplayBufferEnergy:
     def __init__(self, buffer_shapes, size_in_transitions, T, sample_transitions, prioritization, env_name):
         """Creates a replay buffer.
