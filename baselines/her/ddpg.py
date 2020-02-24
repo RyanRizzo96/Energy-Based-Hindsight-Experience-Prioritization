@@ -8,7 +8,7 @@ from baselines import logger
 from baselines.her.util import (
     import_function, store_args, flatten_grads, transitions_in_episode_batch, convert_episode_to_batch_major)
 from baselines.her.normalizer import Normalizer
-from baselines.her.replay_buffer import ReplayBuffer
+from baselines.her.replay_buffer import ReplayBuffer, ReplayBufferEnergy, PrioritizedReplayBuffer
 from baselines.common.mpi_adam import MpiAdam
 from baselines.common import tf_util
 
@@ -114,11 +114,17 @@ class DDPG(object):
         buffer_shapes['ag'] = (self.T, self.dimg)
 
         buffer_size = (self.buffer_size // self.rollout_batch_size) * self.rollout_batch_size
-        self.buffer = ReplayBuffer(buffer_shapes, buffer_size, self.T, self.sample_transitions)
-
-        global DEMO_BUFFER
-        # initialize the demo buffer; in the same way as the primary data buffer
-        DEMO_BUFFER = ReplayBuffer(buffer_shapes, buffer_size, self.T, self.sample_transitions)
+        
+        if self.prioritization == 'energy':
+            self.buffer = ReplayBufferEnergy(buffer_shapes, buffer_size, self.T, self.sample_transitions, 
+                                            self.prioritization)
+        elif self.prioritization == 'tderror':
+            self.buffer = PrioritizedReplayBuffer(buffer_shapes, buffer_size, self.T, self.sample_transitions, alpha)
+            if beta_iters is None:
+                beta_iters = max_timesteps
+            self.beta_schedule = LinearSchedule(beta_iters, initial_p=beta0, final_p=1.0)
+        else:
+            self.buffer = ReplayBuffer(buffer_shapes, buffer_size, self.T, self.sample_transitions)
 
     def _random_action(self, n):
         return np.random.uniform(low=-self.action_scale, high=self.action_scale, size=(n, self.dimu))
@@ -242,13 +248,18 @@ class DDPG(object):
 
         logger.info("Demo buffer size: ", DEMO_BUFFER.get_current_size()) # print out the demonstration buffer size
 
-    def ddpg_store_episode(self, episode_batch, update_stats=True):
+    def ddpg_store_episode(self, episode_batch, dump_buffer, w_potential, w_linear, w_rotational, rank_method, clip_energy, update_stats=True):
         """
         episode_batch: array of batch_size x (T or T+1) x dim_key
                        'o' is of size T+1, others are of size T
         """
 
-        self.buffer.store_episode(episode_batch)
+        if self.prioritization == 'tderror':
+            self.buffer.store_episode(episode_batch, dump_buffer)
+        elif self.prioritization == 'energy':
+            self.buffer.store_episode(episode_batch, w_potential, w_linear, w_rotational, rank_method, clip_energy)
+        else:
+            self.buffer.store_episode(episode_batch)
 
         if update_stats:
             # add transitions to normalizer
@@ -286,19 +297,20 @@ class DDPG(object):
 
     def _grads(self):
         # Avoid feed_dict here for performance!
-        critic_loss, actor_loss, critic_grad, actor_grad = self.sess.run([
+        critic_loss, actor_loss, critic_grad, actor_grad, td_error = self.sess.run([
             self.critic_loss_tf,  # MSE of target_tf - main.critic_tf
             self.main.critic_with_actor_tf,  # actor_loss
             self.critic_grads,
-            self.actor_grads
+            self.actor_grads,
+            self.td_error_tf
         ])
-        return critic_loss, actor_loss, critic_grad, actor_grad
+        return critic_loss, actor_loss, critic_grad, actor_grad, td_error
 
     def _update(self, critic_grads, actor_grads):
         self.critic_optimiser.update(critic_grads, self.Q_lr)
         self.actor_optimiser.update(actor_grads, self.pi_lr)
 
-    def sample_batch(self):
+    def sample_batch(self, t):
         if self.prioritization == 'energy':
             transitions = self.buffer.sample(self.batch_size, self.rank_method, temperature=self.temperature)
             weights = np.ones_like(transitions['r']).copy()
@@ -313,26 +325,52 @@ class DDPG(object):
         transitions['o'], transitions['g'] = self._preprocess_og(o, ag, g)
         transitions['o_2'], transitions['g_2'] = self._preprocess_og(o_2, ag_2, g)
 
+        transitions['w'] = weights.flatten().copy()  # note: ordered dict
         transitions_batch = [transitions[key] for key in self.stage_shapes.keys()]
-        return transitions_batch
+        if self.prioritization == 'tderror':
+            return (transitions_batch, idxs)
+        else:
+            return transitions_batch
 
-    def stage_batch(self, batch=None):
+    def stage_batch(self, t, batch=None): 
         if batch is None:
-            batch = self.sample_batch()
+            if self.prioritization == 'tderror':
+                batch, idxs = self.sample_batch(t)
+            else:
+                batch = self.sample_batch(t)
         assert len(self.buffer_ph_tf) == len(batch)
         self.sess.run(self.stage_op, feed_dict=dict(zip(self.buffer_ph_tf, batch)))
 
-    def ddpg_train(self, stage=True):
+        if self.prioritization == 'tderror':
+            return idxs
+
+    def ddpg_train(self, t, dump_buffer, stage=True):
         if stage:
-            self.stage_batch()
+            if self.prioritization == 'tderror':
+                idxs = self.stage_batch(t)
+            else:
+                self.stage_batch(t)
 
-        self.critic_loss, self.actor_loss, Q_grad, pi_grad = self._grads()
+        self.critic_loss, self.actor_loss, Q_grad, pi_grad, td_error = self._grads()
 
+        if self.prioritization == 'tderror':
+            new_priorities = np.abs(td_error) + self.eps  # td_error
+            if dump_buffer:
+                T = self.buffer.buffers['u'].shape[1]
+                episode_idxs = idxs // T
+                t_samples = idxs % T
+                batch_size = td_error.shape[0]
+                with self.buffer.lock:
+                    for i in range(batch_size):
+                        self.buffer.buffers['td'][episode_idxs[i]][t_samples[i]] = td_error[i]
+
+            self.buffer.update_priorities(idxs, new_priorities)
+            
         # Update gradients for actor and critic networks
         self._update(Q_grad, pi_grad)
 
+        # My variables
         self.visual_actor_loss = 1 - self.actor_loss
-
         self.critic_loss_episode.append(self.critic_loss)
         self.actor_loss_episode.append(self.visual_actor_loss)
 
@@ -410,6 +448,7 @@ class DDPG(object):
         target_tf = tf.clip_by_value(batch_tf['r'] + self.gamma * target_critic_actor_tf, *clip_range)
 
         # MSE of target_tf - critic_tf. This is the TD Learning step
+        self.td_error_tf = tf.stop_gradient(target_tf) - self.main.critic_tf
         self.critic_loss_tf = tf.reduce_mean(tf.square(tf.stop_gradient(target_tf) - self.main.critic_tf))
 
         #

@@ -22,7 +22,8 @@ def mpi_average(value):
 
 # policy is DDPG
 def train(*, policy, rollout_worker, evaluator,
-          n_epochs, n_test_rollouts, n_cycles, n_batches, policy_save_interval,
+          n_epochs, n_test_rollouts, n_cycles, n_batches, policy_save_interval, num_cpu, dump_buffer, w_potential, w_linear,
+          w_rotational, rank_method, clip_energy,
           save_path, demo_file, **kwargs):
     rank = MPI.COMM_WORLD.Get_rank()
 
@@ -39,17 +40,19 @@ def train(*, policy, rollout_worker, evaluator,
     if policy.bc_loss == 1: policy.init_demo_buffer(demo_file)  # initialize demo buffer if training with demonstrations
 
     # total_timesteps = n_epochs * n_cycles * rollout_length * number of rollout workers
+    t = 1
     for epoch in range(n_epochs):
         # train
         rollout_worker.clear_history()
-        for _ in range(n_cycles):
+        for cycle in range(n_cycles):
             # print("Rollout Worker - generating rollouts")
             episode = rollout_worker.generate_rollouts()    # First we generate a rollout then we store it
-            policy.ddpg_store_episode(episode)
+            policy.ddpg_store_episode(episode, dump_buffer, w_potential, w_linear, w_rotational, rank_method, clip_energy)
 
             # After generating and storing rollout we train policy
-            for _ in range(n_batches):
-                c_loss, a_loss = policy.ddpg_train()
+            for batch in range(n_batches):
+                t = ((epoch * n_cycles * n_batches) + (cycle * n_batches) + batch) * num_cpu
+                c_loss, a_loss = policy.ddpg_train(t, dump_buffer)
                 # print("actor loss: ", a_loss)
                 # print("critic loss: ", c_loss)
 
@@ -81,6 +84,9 @@ def train(*, policy, rollout_worker, evaluator,
 
         if rank == 0:
             logger.dump_tabular()
+            
+            if dump_buffer:
+                policy.dump_buffer(epoch)
 
         # save the policy if it's better than the previous ones
         success_rate = mpi_average(evaluator.current_success_rate())
@@ -117,8 +123,9 @@ def learn(*, network, env, total_timesteps,
           load_path=None,
           save_path=None,
           temperature=1.0,
-          prioritization='none',
-          rank_method='none',
+          prioritization='energy',
+          dump_buffer=False,
+          rank_method='none', w_potential=1.0, w_linear=1.0, w_rotational=1.0, clip_energy=999,
           **kwargs
           ):
 
@@ -145,7 +152,16 @@ def learn(*, network, env, total_timesteps,
     params['replay_strategy'] = replay_strategy  # Add replay_strategy as param
     params['temperature'] = temperature
     params['prioritization'] = prioritization
+    params['dump_buffer'] = dump_buffer
     params['rank_method'] = rank_method
+    params['w_potential'] = w_potential
+    params['w_linear'] = w_linear
+    params['w_rotational'] = w_rotational
+    params['clip_energy'] = clip_energy
+    params['num_cpu'] = num_cpu
+    
+    if params['dump_buffer']:
+        params['alpha'] = 0
 
     if env_name in config.DEFAULT_ENV_PARAMS:
         params.update(config.DEFAULT_ENV_PARAMS[env_name])  # merge env-specific parameters in
@@ -232,7 +248,10 @@ def learn(*, network, env, total_timesteps,
         save_path=save_path, policy=policy, rollout_worker=rollout_worker,
         evaluator=evaluator, n_epochs=n_epochs, n_test_rollouts=params['n_test_rollouts'],
         n_cycles=params['n_cycles'], n_batches=params['n_batches'],
-        policy_save_interval=policy_save_interval, demo_file=demo_file)
+        policy_save_interval=policy_save_interval, num_cpu=num_cpu, dump_buffer=dump_buffer,
+        w_potential=params['w_potential'],
+        w_linear=params['w_linear'], w_rotational=params['w_rotational'], rank_method=rank_method,
+        clip_energy=clip_energy, demo_file=demo_file)
 
 
 @click.command()
