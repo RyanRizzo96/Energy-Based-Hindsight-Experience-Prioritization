@@ -197,6 +197,7 @@ def configure_ddpg(dims, params, reuse=False, use_mpi=True, clip_return=True):
     ddpg_params = params['ddpg_params']
     temperature = params['temperature']
     prioritization = params['prioritization']
+    total_timesteps = params['total_timesteps']
     rank_method = params['rank_method']
 
     input_dims = dims.copy()
@@ -220,6 +221,7 @@ def configure_ddpg(dims, params, reuse=False, use_mpi=True, clip_return=True):
                         'aux_loss_weight': params['aux_loss_weight'],
                         'temperature': temperature,
                         'prioritization': prioritization,
+                        'total_timesteps': total_timesteps,
                         'rank_method': rank_method,
                         })
     ddpg_params['info'] = {

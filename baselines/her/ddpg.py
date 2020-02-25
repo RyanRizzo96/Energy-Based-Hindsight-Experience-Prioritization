@@ -11,13 +11,14 @@ from baselines.her.normalizer import Normalizer
 from baselines.her.replay_buffer import ReplayBuffer, ReplayBufferEnergy, PrioritizedReplayBuffer
 from baselines.common.mpi_adam import MpiAdam
 from baselines.common import tf_util
+from baselines.common.schedules import LinearSchedule
 
 
 def dims_to_shapes(input_dims):
     return {key: tuple([val]) if val > 0 else tuple() for key, val in input_dims.items()}
 
 
-global DEMO_BUFFER #buffer for demonstrations
+global DEMO_BUFFER 
 
 
 class DDPG(object):
@@ -26,7 +27,8 @@ class DDPG(object):
                  Q_lr, pi_lr, norm_eps, norm_clip, action_scale, action_l2, clip_obs, scope, T,
                  rollout_batch_size, subtract_goals, relative_goals, clip_pos_returns, clip_return,
                  bc_loss, q_filter, num_demo, demo_batch_size, prm_loss_weight, aux_loss_weight,
-                 sample_transitions, gamma, temperature, prioritization, rank_method, reuse=False, **kwargs):
+                 sample_transitions, gamma, temperature, prioritization, alpha, beta0, beta_iters,
+                 total_timesteps, rank_method, reuse=False, **kwargs):
         """
             Implementation of DDPG that is used in combination with Hindsight Experience Replay (HER).
             Added functionality to use demonstrations for training to Overcome exploration problem.
@@ -121,7 +123,7 @@ class DDPG(object):
         elif self.prioritization == 'tderror':
             self.buffer = PrioritizedReplayBuffer(buffer_shapes, buffer_size, self.T, self.sample_transitions, alpha)
             if beta_iters is None:
-                beta_iters = max_timesteps
+                beta_iters = total_timesteps
             self.beta_schedule = LinearSchedule(beta_iters, initial_p=beta0, final_p=1.0)
         else:
             self.buffer = ReplayBuffer(buffer_shapes, buffer_size, self.T, self.sample_transitions)

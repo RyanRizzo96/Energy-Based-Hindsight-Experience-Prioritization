@@ -152,6 +152,7 @@ def learn(*, network, env, total_timesteps,
     params['replay_strategy'] = replay_strategy  # Add replay_strategy as param
     params['temperature'] = temperature
     params['prioritization'] = prioritization
+    params['total_timesteps'] = total_timesteps
     params['dump_buffer'] = dump_buffer
     params['rank_method'] = rank_method
     params['w_potential'] = w_potential
@@ -184,17 +185,17 @@ def learn(*, network, env, total_timesteps,
     # Print out params before training
     config.log_params(params, logger=logger)
 
-    if num_cpu == 1:
-        logger.warn()
-        logger.warn('*** Warning ***')
-        logger.warn(
-            'You are running HER with just a single MPI worker. This will work, but the ' +
-            'experiments that we report in Plappert et al. (2018, https://arxiv.org/abs/1802.09464) ' +
-            'were obtained with --num_cpu 19. This makes a significant difference and if you ' +
-            'are looking to reproduce those results, be aware of this. Please also refer to ' +
-            'https://github.com/openai/baselines/issues/314 for further details.')
-        logger.warn('****************')
-        logger.warn()
+    # if num_cpu == 1:
+    #     logger.warn()
+    #     logger.warn('*** Warning ***')
+    #     logger.warn(
+    #         'You are running HER with just a single MPI worker. This will work, but the ' +
+    #         'experiments that we report in Plappert et al. (2018, https://arxiv.org/abs/1802.09464) ' +
+    #         'were obtained with --num_cpu 19. This makes a significant difference and if you ' +
+    #         'are looking to reproduce those results, be aware of this. Please also refer to ' +
+    #         'https://github.com/openai/baselines/issues/314 for further details.')
+    #     logger.warn('****************')
+    #     logger.warn()
 
     # Before call to DDPG we configure the dimensions of the observation, action and goal
     dims = config.configure_dims(params)
