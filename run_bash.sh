@@ -8,5 +8,6 @@ export OPENAI_LOG_FORMAT=stdout,log,csv,tensorboard
 
 # python3 -m baselines.run --alg=her --env=FetchReach-v1 --num_timesteps=5000 --log_path=.log/tensorboard_test/actor_critic_loss/run4
 
-for seed in $(seq 0 1); do OPENAI_LOGDIR=/home/ubuntu/Energy-Based-Prioritization/.log/FetchPAP200k/trial_1-$seed-$seed mpirun -np 16 python3 -m baselines.run --alg=her --env=FetchPickAndPlace-v1 --num_timesteps=200000 --save_path=EBP_policies/FetchPAP200k/trial_1-$seed
+for seed in $(seq 0 1); do OPENAI_LOGDIR=/home/ubuntu/Energy-Based-Prioritization/.log/FetchPAP200k/trial_1-$seed-$seed mpirun -np 16 python3 -m baselines.run --alg=her --env=FetchPickAndPlace-v1 --num_timesteps=200000 --seed=$seed --save_path=EBP_policies/FetchPAP200k/trial_1-$seed
+
 # python3 -m baselines.run --alg=her --env=FetchReach-v1 --num_timesteps=200000
