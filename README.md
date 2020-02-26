@@ -1,6 +1,6 @@
 # Energy-Based-Prioritization
 
-Comparison betwween Hindsight Experience Replay and Energy-Based Hindisght Experience Prioritization, avergaed across 5 random seeds, trained on 16 CPUs. (1 epoch = 40,000 iterations)
+Comparison betwween Hindsight Experience Replay and Energy-Based Hindisght Experience Prioritization, avergaed across 5 random seeds each, trained on 16 CPUs. (1 epoch = 40,000 iterations)
 
 Results improve on state-of-the-art HER implementation by Andrychowiz et.al. (2017)
 
