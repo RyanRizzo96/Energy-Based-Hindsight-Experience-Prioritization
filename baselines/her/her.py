@@ -242,7 +242,7 @@ def learn(*, network, env, total_timesteps,
     print("rr/ rollout_batch_size = ", rollout_worker.rollout_batch_size)
 
     # // for division without remainder
-    n_epochs =  100
+    n_epochs = total_timesteps // n_cycles // rollout_worker.T // rollout_worker.rollout_batch_size
     print("rr/ n_epochs = ", n_epochs)
 
     return train(
