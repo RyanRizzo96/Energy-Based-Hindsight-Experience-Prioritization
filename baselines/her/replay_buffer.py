@@ -23,6 +23,7 @@ def quaternion_to_euler_angle(array):
     t2 = +2.0 * (w * y - z * x)
     t2 = +1.0 if t2 > +1.0 else t2
     t2 = -1.0 if t2 < -1.0 else t2
+
     Y = math.asin(t2)
     t3 = +2.0 * (w * z + x * y)
     t4 = +1.0 - 2.0 * (ysqr + z * z)
