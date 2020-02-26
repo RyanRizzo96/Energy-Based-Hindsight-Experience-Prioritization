@@ -105,7 +105,6 @@ def make_sample_her_transitions_energy(replay_strategy, replay_k, reward_fun):
             episode_idxs_energy = np.random.choice(rollout_batch_size, size=batch_size, replace=True, p=p_trajectory.flatten())
             episode_idxs = episode_idxs_energy
 
-
         transitions = {}
         for key in episode_batch.keys():
             if not key =='p' and not key == 's' and not key == 'e':
