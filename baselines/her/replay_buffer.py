@@ -190,9 +190,9 @@ class ReplayBufferEnergy:
                 buffers[key] = self.buffers[key][:self.current_size]
 
         buffers['o_2'] = buffers['o'][:, 1:, :]
-        print('ag', buffers['ag'])
+        # print('ag', buffers['ag'])
         buffers['ag_2'] = buffers['ag'][:, 1:, :]
-        print('ag2', buffers['ag_2'])
+        # print('ag2', buffers['ag_2'])
 
         transitions = self.sample_transitions(buffers, batch_size, rank_method, temperature)
 

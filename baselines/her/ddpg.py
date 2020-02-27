@@ -27,7 +27,7 @@ class DDPG(object):
                  Q_lr, pi_lr, norm_eps, norm_clip, action_scale, action_l2, clip_obs, scope, T,
                  rollout_batch_size, subtract_goals, relative_goals, clip_pos_returns, clip_return,
                  bc_loss, q_filter, num_demo, demo_batch_size, prm_loss_weight, aux_loss_weight,
-                 sample_transitions, gamma, temperature, prioritization, alpha, beta0, beta_iters,
+                 sample_transitions, gamma, temperature, prioritization, env_name, alpha, beta0, beta_iters,
                  total_timesteps, rank_method, reuse=False, **kwargs):
         """
             Implementation of DDPG that is used in combination with Hindsight Experience Replay (HER).
@@ -84,6 +84,7 @@ class DDPG(object):
         
         # Energy based parameters
         self.prioritization = prioritization
+        self.env_name = env_name
         self.temperature = temperature
         self.rank_method = rank_method
 
@@ -119,7 +120,7 @@ class DDPG(object):
         
         if self.prioritization == 'energy':
             self.buffer = ReplayBufferEnergy(buffer_shapes, buffer_size, self.T, self.sample_transitions, 
-                                            self.prioritization)
+                                            self.prioritization, self.env_name)
         elif self.prioritization == 'tderror':
             self.buffer = PrioritizedReplayBuffer(buffer_shapes, buffer_size, self.T, self.sample_transitions, alpha)
             if beta_iters is None:
