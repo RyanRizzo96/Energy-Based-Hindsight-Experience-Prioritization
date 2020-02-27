@@ -5,3 +5,6 @@ Comparison betwween Hindsight Experience Replay and Energy-Based Hindisght Exper
 Results improve on state-of-the-art HER implementation by Andrychowiz et.al. (2017)
 
 ![image](https://user-images.githubusercontent.com/31866965/75350590-139c1400-58a7-11ea-95bc-a2a3cc9f0e12.png)
+
+![image](https://user-images.githubusercontent.com/31866965/75447452-af8e5400-5969-11ea-913f-de7e1dd2c71f.png)
+
