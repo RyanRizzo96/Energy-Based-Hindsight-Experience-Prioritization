@@ -142,7 +142,7 @@ class ReplayBuffer:
 
 
 class ReplayBufferEnergy:
-    def __init__(self, buffer_shapes, size_in_transitions, T, sample_transitions, prioritization):
+    def __init__(self, buffer_shapes, size_in_transitions, T, sample_transitions, prioritization, env_name):
         """Creates a replay buffer.
 
         Args:
@@ -163,7 +163,7 @@ class ReplayBufferEnergy:
         self.buffers['p'] = np.empty([self.size, 1])  # priority/ranking
 
         self.prioritization = prioritization
-        # self.env_name = env_name
+        self.env_name = env_name
 
         # memory management
         self.current_size = 0
@@ -190,7 +190,9 @@ class ReplayBufferEnergy:
                 buffers[key] = self.buffers[key][:self.current_size]
 
         buffers['o_2'] = buffers['o'][:, 1:, :]
+        print('ag', buffers['ag'])
         buffers['ag_2'] = buffers['ag'][:, 1:, :]
+        print('ag2', buffers['ag_2'])
 
         transitions = self.sample_transitions(buffers, batch_size, rank_method, temperature)
 
@@ -212,50 +214,50 @@ class ReplayBufferEnergy:
             buffers[key] = episode_batch[key]
 
         if self.prioritization == 'energy':
-            # if self.env_name in ['FetchPickAndPlace-v0', 'FetchSlide-v0', 'FetchPush-v0']:
-            height = buffers['ag'][:, :, 2]
-            height_0 = np.repeat(height[:, 0].reshape(-1, 1), height[:, 1::].shape[1], axis=1)
-            height = height[:, 1::] - height_0
-            g, m, delta_t = 9.81, 1, 0.04
-            potential_energy = g * m * height
-            diff = np.diff(buffers['ag'], axis=1)
-            velocity = diff / delta_t
-            kinetic_energy = 0.5 * m * np.power(velocity, 2)
-            kinetic_energy = np.sum(kinetic_energy, axis=2)
-            energy_totoal = w_potential * potential_energy + w_linear * kinetic_energy
-            energy_diff = np.diff(energy_totoal, axis=1)
-            energy_transition = energy_totoal.copy()
-            energy_transition[:, 1::] = energy_diff.copy()
-            energy_transition = np.clip(energy_transition, 0, clip_energy)
-            energy_transition_total = np.sum(energy_transition, axis=1)
-            episode_batch['e'] = energy_transition_total.reshape(-1, 1)
-            # elif self.env_name in ['HandManipulatePenRotate-v0', \
-            #                        'HandManipulateEggFull-v0', \
-            #                        'HandManipulateBlockFull-v0', \
-            #                        'HandManipulateBlockRotateXYZ-v0']:
-            #     g, m, delta_t, inertia = 9.81, 1, 0.04, 1
-            #     quaternion = buffers['ag'][:, :, 3:].copy()
-            #     angle = np.apply_along_axis(quaternion_to_euler_angle, 2, quaternion)
-            #     diff_angle = np.diff(angle, axis=1)
-            #     angular_velocity = diff_angle / delta_t
-            #     rotational_energy = 0.5 * inertia * np.power(angular_velocity, 2)
-            #     rotational_energy = np.sum(rotational_energy, axis=2)
-            #     buffers['ag'] = buffers['ag'][:, :, :3]
-            #     height = buffers['ag'][:, :, 2]
-            #     height_0 = np.repeat(height[:, 0].reshape(-1, 1), height[:, 1::].shape[1], axis=1)
-            #     height = height[:, 1::] - height_0
-            #     potential_energy = g * m * height
-            #     diff = np.diff(buffers['ag'], axis=1)
-            #     velocity = diff / delta_t
-            #     kinetic_energy = 0.5 * m * np.power(velocity, 2)
-            #     kinetic_energy = np.sum(kinetic_energy, axis=2)
-            #     energy_totoal = w_potential * potential_energy + w_linear * kinetic_energy + w_rotational * rotational_energy
-            #     energy_diff = np.diff(energy_totoal, axis=1)
-            #     energy_transition = energy_totoal.copy()
-            #     energy_transition[:, 1::] = energy_diff.copy()
-            #     energy_transition = np.clip(energy_transition, 0, clip_energy)
-            #     energy_transition_total = np.sum(energy_transition, axis=1)
-            #     episode_batch['e'] = energy_transition_total.reshape(-1, 1)
+            if self.env_name in ['FetchPickAndPlace-v1', 'FetchSlide-v1', 'FetchPush-v1', 'FetchReach-v1']:
+                height = buffers['ag'][:, :, 2]
+                height_0 = np.repeat(height[:, 0].reshape(-1, 1), height[:, 1::].shape[1], axis=1)
+                height = height[:, 1::] - height_0
+                g, m, delta_t = 9.81, 1, 0.04
+                potential_energy = g * m * height
+                diff = np.diff(buffers['ag'], axis=1)
+                velocity = diff / delta_t
+                kinetic_energy = 0.5 * m * np.power(velocity, 2)
+                kinetic_energy = np.sum(kinetic_energy, axis=2)
+                energy_totoal = w_potential * potential_energy + w_linear * kinetic_energy
+                energy_diff = np.diff(energy_totoal, axis=1)
+                energy_transition = energy_totoal.copy()
+                energy_transition[:, 1::] = energy_diff.copy()
+                energy_transition = np.clip(energy_transition, 0, clip_energy)
+                energy_transition_total = np.sum(energy_transition, axis=1)
+                episode_batch['e'] = energy_transition_total.reshape(-1, 1)
+            elif self.env_name in ['HandManipulatePenRotate-v0',
+                                   'HandManipulateEggFull-v0',
+                                   'HandManipulateBlockFull-v0',
+                                   'HandManipulateBlockRotateXYZ-v0']:
+                g, m, delta_t, inertia = 9.81, 1, 0.04, 1
+                quaternion = buffers['ag'][:, :, 3:].copy()
+                angle = np.apply_along_axis(quaternion_to_euler_angle, 2, quaternion)
+                diff_angle = np.diff(angle, axis=1)
+                angular_velocity = diff_angle / delta_t
+                rotational_energy = 0.5 * inertia * np.power(angular_velocity, 2)
+                rotational_energy = np.sum(rotational_energy, axis=2)
+                buffers['ag'] = buffers['ag'][:, :, :3]
+                height = buffers['ag'][:, :, 2]
+                height_0 = np.repeat(height[:, 0].reshape(-1, 1), height[:, 1::].shape[1], axis=1)
+                height = height[:, 1::] - height_0
+                potential_energy = g * m * height
+                diff = np.diff(buffers['ag'], axis=1)
+                velocity = diff / delta_t
+                kinetic_energy = 0.5 * m * np.power(velocity, 2)
+                kinetic_energy = np.sum(kinetic_energy, axis=2)
+                energy_totoal = w_potential * potential_energy + w_linear * kinetic_energy + w_rotational * rotational_energy
+                energy_diff = np.diff(energy_totoal, axis=1)
+                energy_transition = energy_totoal.copy()
+                energy_transition[:, 1::] = energy_diff.copy()
+                energy_transition = np.clip(energy_transition, 0, clip_energy)
+                energy_transition_total = np.sum(energy_transition, axis=1)
+                episode_batch['e'] = energy_transition_total.reshape(-1, 1)
         else:
             print('Trajectory Energy Function Not Implemented')
             exit()

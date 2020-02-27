@@ -88,11 +88,14 @@ def make_sample_her_transitions_energy(replay_strategy, replay_k, reward_fun):
 
     def _sample_her_transitions(episode_batch, batch_size_in_transitions, rank_method, temperature, update_stats=False):
 
-        T = episode_batch['u'].shape[1]
+        T = episode_batch['u'].shape[1]  # 50
         rollout_batch_size = episode_batch['u'].shape[0]
-        batch_size = batch_size_in_transitions
+        # print("rollout_batch_size: ", rollout_batch_size)  # 1- 10
+        batch_size = batch_size_in_transitions  # 256
 
+        # 256 random numbers between (0, rollout_batch_size)
         episode_idxs = np.random.randint(0, rollout_batch_size, batch_size)
+        # 256 random number between 0 and 50
         t_samples = np.random.randint(T, size=batch_size)
 
         if not update_stats:
@@ -100,11 +103,14 @@ def make_sample_her_transitions_energy(replay_strategy, replay_k, reward_fun):
                 energy_trajectory = episode_batch['e']
             else:
                 energy_trajectory = episode_batch['p']
-            p_trajectory = np.power(energy_trajectory, 1/(temperature+1e-2))
+            # print("E traj: ", energy_trajectory)
+            p_trajectory = np.power(energy_trajectory, 1/(temperature+1e-2))  # traj / 0.9900990099009901
             p_trajectory = p_trajectory / p_trajectory.sum()
+            # print("P traj: ", p_trajectory)
             episode_idxs_energy = np.random.choice(rollout_batch_size, size=batch_size, replace=True, p=p_trajectory.flatten())
             episode_idxs = episode_idxs_energy
-
+            # print("Energy idx: ", episode_idxs)
+        
         transitions = {}
         for key in episode_batch.keys():
             if not key =='p' and not key == 's' and not key == 'e':
