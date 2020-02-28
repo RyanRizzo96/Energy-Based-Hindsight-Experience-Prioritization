@@ -103,11 +103,11 @@ def make_sample_her_transitions_energy(replay_strategy, replay_k, reward_fun):
         if not update_stats:
             if rank_method == 'none':
                 energy_trajectory = episode_batch['e']
-                print("en traj", episode_batch['e'])
+                # print("en traj", episode_batch['e'])
                 energy_direction = episode_batch['ed']
                 # print("energy_direction",energy_direction)
                 normalized_ed = energy_direction / np.sqrt(np.sum(energy_direction ** 2))
-                print("normalized_ed", normalized_ed)
+                # print("normalized_ed", normalized_ed)
             else:
                 energy_trajectory = episode_batch['p']
 
