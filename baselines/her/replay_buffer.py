@@ -250,7 +250,9 @@ class ReplayBufferEnergy:
                 # print("normalized_diff_end", normalized_diff_end)
 
                 total_diff_from_goal = total_diff_start - total_diff_end
-                # print("FROM BUFF", total_diff_from_goal)
+                print("total_diff_from_goal", total_diff_from_goal)
+                normalized_ed = total_diff_from_goal / np.sqrt(np.sum(total_diff_from_goal ** 2))
+                # print("normalized_ed", normalized_ed)
                 episode_batch['ed'] = total_diff_from_goal.reshape(-1, 1)
                 
                 # if difference from goal is greater when it started then when it ended than good episode
