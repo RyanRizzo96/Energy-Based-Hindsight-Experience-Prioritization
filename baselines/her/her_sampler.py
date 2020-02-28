@@ -123,7 +123,7 @@ def make_sample_her_transitions_energy(replay_strategy, replay_k, reward_fun):
         
         transitions = {}
         for key in episode_batch.keys():
-            if not key == 'd' and not key == 's' and not key == 'e'  and not key == 'ed':
+            if not key == 'd' and not key == 's' and not key == 'e' and not key == 'ed':
                 transitions[key] = episode_batch[key][episode_idxs, t_samples].copy()
 
         # Select future time indexes proportional with probability future_p. These
