@@ -254,7 +254,7 @@ class ReplayBufferEnergy:
                 episode_batch['ed'] = total_diff_from_goal.reshape(-1, 1)
                 
                 # if difference from goal is greater when it started then when it ended than good episode
-                if total_diff_from_goal > 0:
+                # if total_diff_from_goal > 0:
                     # print("Transition ended closer to target than it started")
 
                 # print("diff", diff)
