@@ -224,25 +224,25 @@ class ReplayBufferEnergy:
                 diff = np.diff(buffers['ag'], axis=1)  # difference between previous ag and new ag
                
                 dg = buffers['g'][0][0]     # We only need one desired goal for comparison
-                # print("dg", dg)
+                print("dg", dg)
     
                 # Obtaining first and last achieved goals
                 first_ag = buffers['ag'][0][0]               
-                # print("first_ag", first_ag)
+                print("first_ag", first_ag)
                 last_ag = buffers['ag'][0][49] 
-                # print("last_ag", last_ag)
+                print("last_ag", last_ag)
 
                 diff_first_ag = first_ag - dg   # Subtracting first achieved goal by desired goal
                 diff_first_ag = np.power(diff_first_ag, 2)
                 diff_last_ag = last_ag - dg
                 diff_last_ag = np.power(diff_last_ag, 2)
-                # print("diff_0", diff_first_ag)
-                # print("diff_49", diff_last_ag)
+                print("diff_0", diff_first_ag)
+                print("diff_49", diff_last_ag)
                 
                 total_diff_start = np.sum(diff_first_ag)
                 total_diff_end = np.sum(diff_last_ag)
-                # print("total_diff_start", total_diff_start)
-                # print("total_diff_end", total_diff_end)
+                print("total_diff_start", total_diff_start)
+                print("total_diff_end", total_diff_end)
 
                 # normalized_diff_start = diff_first_ag / np.sqrt(np.sum(diff_first_ag**2))
                 # normalized_diff_end = diff_last_ag / np.sqrt(np.sum(diff_last_ag ** 2))
@@ -250,13 +250,24 @@ class ReplayBufferEnergy:
                 # print("normalized_diff_end", normalized_diff_end)
 
                 total_diff_from_goal = total_diff_start - total_diff_end
-                # print("total_diff_from_goal", total_diff_from_goal)
+                # if total_diff_from_goal < 0.00001:
+                #     total_diff_from_goal = 0
+                
+                if total_diff_from_goal < 0.000001:
+                    total_diff_from_goal = 0.000001
+                    # print("total_diff_from_goal", total_diff_from_goal)
+                    episode_batch['ed'] = total_diff_from_goal
+                
+                else: 
+                    # print("total_diff_from_goal", total_diff_from_goal)
+                    episode_batch['ed'] = total_diff_from_goal.reshape(-1, 1)
+                    
                 normalized_ed = total_diff_from_goal / np.sqrt(np.sum(total_diff_from_goal ** 2))
-                # print("normalized_ed", normalized_ed)
-                episode_batch['ed'] = total_diff_from_goal.reshape(-1, 1)
+                # print("normalized_ed", normalized_ed)Z
+                    
                 
                 # if difference from goal is greater when it started then when it ended than good episode
-                # if total_diff_from_goal > 0:
+                # if to tal_diff_from_goal > 0:
                     # print("Transition ended closer to target than it started")
 
                 # print("diff", diff)

@@ -105,7 +105,7 @@ def make_sample_her_transitions_energy(replay_strategy, replay_k, reward_fun):
                 energy_trajectory = episode_batch['e']
                 # print("en traj", episode_batch['e'])
                 energy_direction = episode_batch['ed']
-                # print("energy_direction",energy_direction)
+                # print("energy_direction", energy_direction)
                 normalized_ed = energy_direction / np.sqrt(np.sum(energy_direction ** 2))
                 # print("normalized_ed", normalized_ed)
             else:
@@ -115,6 +115,9 @@ def make_sample_her_transitions_energy(replay_strategy, replay_k, reward_fun):
             p_trajectory_new = np.power(energy_trajectory + normalized_ed, 1 / (temperature + 1e-2))  # traj / 0.9900990099009901
             p_trajectory = p_trajectory / p_trajectory.sum()
             p_trajectory_new = p_trajectory_new / p_trajectory_new.sum()
+            # print("normalized_ed", normalized_ed)
+           # print("p_trajectory", p_trajectory)
+            # print("p_trajectory_new ", p_trajectory_new)
             # print("P traj: ", p_trajectory)
             # print("P traj NEW: ", p_trajectory_new)
             episode_idxs_energy = np.random.choice(rollout_batch_size, size=batch_size, replace=True, p=p_trajectory_new.flatten())
