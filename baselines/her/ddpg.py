@@ -121,11 +121,11 @@ class DDPG(object):
         if self.prioritization == 'energy':
             self.buffer = ReplayBufferEnergy(buffer_shapes, buffer_size, self.T, self.sample_transitions, 
                                             self.prioritization, self.env_name)
-        elif self.prioritization == 'tderror':
-            self.buffer = PrioritizedReplayBuffer(buffer_shapes, buffer_size, self.T, self.sample_transitions, alpha)
-            if beta_iters is None:
-                beta_iters = total_timesteps
-            self.beta_schedule = LinearSchedule(beta_iters, initial_p=beta0, final_p=1.0)
+        # elif self.prioritization == 'tderror':
+        #     self.buffer = PrioritizedReplayBuffer(buffer_shapes, buffer_size, self.T, self.sample_transitions, alpha)
+        #     if beta_iters is None:
+        #         beta_iters = total_timesteps
+        #     self.beta_schedule = LinearSchedule(beta_iters, initial_p=beta0, final_p=1.0)
         else:
             self.buffer = ReplayBuffer(buffer_shapes, buffer_size, self.T, self.sample_transitions)
 
@@ -257,9 +257,9 @@ class DDPG(object):
                        'o' is of size T+1, others are of size T
         """
 
-        if self.prioritization == 'tderror':
-            self.buffer.store_episode(episode_batch, dump_buffer)
-        elif self.prioritization == 'energy':
+        # if self.prioritization == 'tderror':
+        #     self.buffer.store_episode(episode_batch, dump_buffer)
+        if self.prioritization == 'energy':
             self.buffer.store_episode(episode_batch, w_potential, w_linear, w_rotational, rank_method, clip_energy)
         else:
             self.buffer.store_episode(episode_batch)
@@ -274,9 +274,9 @@ class DDPG(object):
             if self.prioritization == 'energy':
                 if not self.buffer.current_size == 0 and not len(episode_batch['ag']) == 0:
                     transitions = self.sample_transitions(episode_batch, num_normalizing_transitions, 'none', 1.0, True)
-            elif self.prioritization == 'tderror':
-                transitions, weights, episode_idxs = \
-                    self.sample_transitions(self.buffer, episode_batch, num_normalizing_transitions, beta=0)
+            # elif self.prioritization == 'tderror':
+            #     transitions, weights, episode_idxs = \
+            #         self.sample_transitions(self.buffer, episode_batch, num_normalizing_transitions, beta=0)
             else:
                 transitions = self.sample_transitions(episode_batch, num_normalizing_transitions)
             # print("END ddpg sample transition")
@@ -317,8 +317,8 @@ class DDPG(object):
         if self.prioritization == 'energy':
             transitions = self.buffer.sample(self.batch_size, self.rank_method, temperature=self.temperature)
             weights = np.ones_like(transitions['r']).copy()
-        elif self.prioritization == 'tderror':
-            transitions, weights, idxs = self.buffer.sample(self.batch_size, beta=self.beta_schedule.value(t))
+        # elif self.prioritization == 'tderror':
+        #     transitions, weights, idxs = self.buffer.sample(self.batch_size, beta=self.beta_schedule.value(t))
         else:
             transitions = self.buffer.sample(self.batch_size)
             weights = np.ones_like(transitions['r']).copy()
@@ -330,44 +330,44 @@ class DDPG(object):
 
         transitions['w'] = weights.flatten().copy()  # note: ordered dict
         transitions_batch = [transitions[key] for key in self.stage_shapes.keys()]
-        if self.prioritization == 'tderror':
-            return (transitions_batch, idxs)
-        else:
-            return transitions_batch
+        # if self.prioritization == 'tderror':
+        #     return (transitions_batch, idxs)
+        # else:
+        return transitions_batch
 
     def stage_batch(self, t, batch=None): 
         if batch is None:
-            if self.prioritization == 'tderror':
-                batch, idxs = self.sample_batch(t)
-            else:
+            # if self.prioritization == 'tderror':
+            #     batch, idxs = self.sample_batch(t)
+            # else:
                 batch = self.sample_batch(t)
         assert len(self.buffer_ph_tf) == len(batch)
         self.sess.run(self.stage_op, feed_dict=dict(zip(self.buffer_ph_tf, batch)))
 
-        if self.prioritization == 'tderror':
-            return idxs
+        # if self.prioritization == 'tderror':
+        #     return idxs
 
     def ddpg_train(self, t, dump_buffer, stage=True):
         if stage:
-            if self.prioritization == 'tderror':
-                idxs = self.stage_batch(t)
-            else:
+            # if self.prioritization == 'tderror':
+            #     idxs = self.stage_batch(t)
+            # else:
                 self.stage_batch(t)
 
         self.critic_loss, self.actor_loss, Q_grad, pi_grad, td_error = self._grads()
 
-        if self.prioritization == 'tderror':
-            new_priorities = np.abs(td_error) + self.eps  # td_error
-            if dump_buffer:
-                T = self.buffer.buffers['u'].shape[1]
-                episode_idxs = idxs // T
-                t_samples = idxs % T
-                batch_size = td_error.shape[0]
-                with self.buffer.lock:
-                    for i in range(batch_size):
-                        self.buffer.buffers['td'][episode_idxs[i]][t_samples[i]] = td_error[i]
-
-            self.buffer.update_priorities(idxs, new_priorities)
+        # if self.prioritization == 'tderror':
+        #     new_priorities = np.abs(td_error) + self.eps  # td_error
+        #     if dump_buffer:
+        #         T = self.buffer.buffers['u'].shape[1]
+        #         episode_idxs = idxs // T
+        #         t_samples = idxs % T
+        #         batch_size = td_error.shape[0]
+        #         with self.buffer.lock:
+        #             for i in range(batch_size):
+        #                 self.buffer.buffers['td'][episode_idxs[i]][t_samples[i]] = td_error[i]
+        # 
+        #     self.buffer.update_priorities(idxs, new_priorities)
             
         # Update gradients for actor and critic networks
         self._update(Q_grad, pi_grad)

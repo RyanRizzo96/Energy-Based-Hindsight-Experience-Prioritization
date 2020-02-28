@@ -85,6 +85,8 @@ def make_sample_her_transitions_energy(replay_strategy, replay_k, reward_fun):
         future_p = 1 - (1. / (1 + replay_k))
     else:
         future_p = 0
+        
+        is_print = 0
 
     def _sample_her_transitions(episode_batch, batch_size_in_transitions, rank_method, temperature, update_stats=False):
 
@@ -101,19 +103,27 @@ def make_sample_her_transitions_energy(replay_strategy, replay_k, reward_fun):
         if not update_stats:
             if rank_method == 'none':
                 energy_trajectory = episode_batch['e']
+                # print("en traj", episode_batch['e'])
+                # print("Ep batch", episode_batch['ed'])
+                energy_direction = episode_batch['ed']
+                normalized_ed = energy_direction / np.sqrt(np.sum(energy_direction ** 2))
+                # print("normalized_ed", normalized_ed)
             else:
                 energy_trajectory = episode_batch['p']
-            # print("E traj: ", energy_trajectory)
+
             p_trajectory = np.power(energy_trajectory, 1/(temperature+1e-2))  # traj / 0.9900990099009901
+            p_trajectory_new = np.power(energy_trajectory + normalized_ed, 1 / (temperature + 1e-2))  # traj / 0.9900990099009901
             p_trajectory = p_trajectory / p_trajectory.sum()
-            # print("P traj: ", p_trajectory)
+            p_trajectory_new = p_trajectory_new / p_trajectory_new.sum()
+            print("P traj: ", p_trajectory)
+            print("P traj NEW: ", p_trajectory_new)
             episode_idxs_energy = np.random.choice(rollout_batch_size, size=batch_size, replace=True, p=p_trajectory.flatten())
             episode_idxs = episode_idxs_energy
             # print("Energy idx: ", episode_idxs)
         
         transitions = {}
         for key in episode_batch.keys():
-            if not key =='p' and not key == 's' and not key == 'e':
+            if not key == 'd' and not key == 's' and not key == 'e'  and not key == 'ed':
                 transitions[key] = episode_batch[key][episode_idxs, t_samples].copy()
 
         # Select future time indexes proportional with probability future_p. These

@@ -160,7 +160,8 @@ class ReplayBufferEnergy:
         self.buffers = {key: np.empty([self.size, *shape])
                         for key, shape in buffer_shapes.items()}
         self.buffers['e'] = np.empty([self.size, 1])  # energy
-        self.buffers['p'] = np.empty([self.size, 1])  # priority/ranking
+        self.buffers['d'] = np.empty([self.size, 1])  # priority/ranking
+        self.buffers['ed'] = np.empty([self.size, 1])  # energy/directional
 
         self.prioritization = prioritization
         self.env_name = env_name
@@ -197,7 +198,7 @@ class ReplayBufferEnergy:
         transitions = self.sample_transitions(buffers, batch_size, rank_method, temperature)
 
         for key in (['r', 'o_2', 'ag_2'] + list(self.buffers.keys())):
-            if not key == 'p' and not key == 'e':
+            if not key == 'd' and not key == 'e' and not key == 'ed':
                 assert key in transitions, "key %s missing from transitions" % key
 
         return transitions
@@ -220,16 +221,53 @@ class ReplayBufferEnergy:
                 height = height[:, 1::] - height_0
                 g, m, delta_t = 9.81, 1, 0.04
                 potential_energy = g * m * height
-                diff = np.diff(buffers['ag'], axis=1)
+                diff = np.diff(buffers['ag'], axis=1)  # difference between previous ag and new ag
+               
+                dg = buffers['g'][0][0]     # We only need one desired goal for comparison
+                print("dg", dg)
+    
+                # Obtaining first and last achieved goals
+                first_ag = buffers['ag'][0][0]               
+                # print("first_ag", first_ag)
+                last_ag = buffers['ag'][0][49] 
+                # print("last_ag", last_ag)
+
+                diff_first_ag = first_ag - dg   # Subtracting first achieved goal by desired goal
+                diff_first_ag = np.power(diff_first_ag, 2)
+                diff_last_ag = last_ag - dg
+                diff_last_ag = np.power(diff_last_ag, 2)
+                # print("diff_0", diff_first_ag)
+                # print("diff_49", diff_last_ag)
+                
+                total_diff_start = np.sum(diff_first_ag)
+                total_diff_end = np.sum(diff_last_ag)
+                print("total_diff_start", total_diff_start)
+                print("total_diff_end", total_diff_end)
+
+                # normalized_diff_start = diff_first_ag / np.sqrt(np.sum(diff_first_ag**2))
+                # normalized_diff_end = diff_last_ag / np.sqrt(np.sum(diff_last_ag ** 2))
+                # print("normalized_diff_start", normalized_diff_start)
+                # print("normalized_diff_end", normalized_diff_end)
+
+                total_diff_from_goal = total_diff_start - total_diff_end
+                print("FROM BUFF", total_diff_from_goal)
+                episode_batch['ed'] = total_diff_from_goal.reshape(-1, 1)
+                
+                # if difference from goal is greater when it started then when it ended than good episode
+                if total_diff_from_goal > 0:
+                    print("Transition ended closer to target than it started")
+
+                # print("diff", diff)
                 velocity = diff / delta_t
                 kinetic_energy = 0.5 * m * np.power(velocity, 2)
                 kinetic_energy = np.sum(kinetic_energy, axis=2)
                 energy_totoal = w_potential * potential_energy + w_linear * kinetic_energy
                 energy_diff = np.diff(energy_totoal, axis=1)
-                energy_transition = energy_totoal.copy()
+                energy_transition = energy_totoal.copy() 
                 energy_transition[:, 1::] = energy_diff.copy()
                 energy_transition = np.clip(energy_transition, 0, clip_energy)
                 energy_transition_total = np.sum(energy_transition, axis=1)
+                # print("Energy", energy_transition_total)
                 episode_batch['e'] = energy_transition_total.reshape(-1, 1)
             elif self.env_name in ['HandManipulatePenRotate-v0',
                                    'HandManipulateEggFull-v0',
@@ -267,18 +305,20 @@ class ReplayBufferEnergy:
 
             # load inputs into buffers
             for key in self.buffers.keys():
-                if not key == 'p':
+                if not key == 'd':
                     self.buffers[key][idxs] = episode_batch[key]
 
             self.n_transitions_stored += batch_size * self.T
 
             energy_transition_total = self.buffers['e'][:self.current_size]
+            total_diff_from_goal = self.buffers['ed'][:self.current_size]
+            
             if rank_method == 'none':
                 rank_method = 'dense'
             energy_rank = rankdata(energy_transition_total, method=rank_method)
             energy_rank = energy_rank - 1
             energy_rank = energy_rank.reshape(-1, 1)
-            self.buffers['p'][:self.current_size] = energy_rank.copy()
+            self.buffers['d'][:self.current_size] = energy_rank.copy()
 
     def get_current_episode_size(self):
         with self.lock:
