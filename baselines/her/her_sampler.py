@@ -139,7 +139,7 @@ def make_sample_her_transitions_energy(replay_strategy, replay_k, reward_fun):
                                                    p=p_trajectory_sum.flatten())
             episode_idxs = episode_idxs_energy
 
-            if logger:
+            # if logger:
                 # print("en traj", episode_batch['e'])
                 # print("p_trajectory", p_trajectory)
                 # print("p_trajectory_sum", p_trajectory_sum)
