@@ -188,6 +188,7 @@ class ReplayBufferEnergy:
         """
         logger = False
         if self.sample_count % 40 == 0:
+            # self.cycle_count += 1
             logger = False
             # print("Enter Sample ----------------------------", self.cycle_count)
             
@@ -210,11 +211,13 @@ class ReplayBufferEnergy:
         transitions = self.sample_transitions(buffers, batch_size, rank_method, temperature, self.sample_count, self.cycle_count)
         
         # print("buffer cycle:", cycle_count)
-        if logger:
-            # print("buffer_cycle", self.cycle_count)
-            # print("SAMPLE sample_count", self.sample_count)
-            self.cycle_count += 1
+        # if logger:
+        #     print("buffer_cycle", self.cycle_count)
+        #     print("SAMPLE sample_count", self.sample_count)
 
+        if self.sample_count % 40 == 0:
+            self.cycle_count += 1
+            
         self.sample_count += 1
         
         for key in (['r', 'o_2', 'ag_2'] + list(self.buffers.keys())):
@@ -291,16 +294,8 @@ class ReplayBufferEnergy:
                     # episode_batch['ed'] = total_diff_from_goal.reshape(-1, 1)
                     
                 normalized_ed = total_diff_from_goal / np.sqrt(np.sum(total_diff_from_goal ** 2))
-                # print("normalized_ed", normalized_ed)Z
+                # print("diff", diff)
 
-                # if difference from goal is greater when it started then when it ended than good episode
-                if total_diff_from_goal > 0:
-                    # print("Trajectory ended closer to target than it started for cycle count", self.cycle_count-1)
-                    episode_batch['ed'] = 1
-                else:
-                    episode_batch['ed'] = 0
-
-                    # print("diff", diff)
                 velocity = diff / delta_t
                 kinetic_energy = 0.5 * m * np.power(velocity, 2)
                 kinetic_energy = np.sum(kinetic_energy, axis=2)
@@ -311,7 +306,18 @@ class ReplayBufferEnergy:
                 energy_transition = np.clip(energy_transition, 0, clip_energy)
                 energy_transition_total = np.sum(energy_transition, axis=1)
                 # print("Energy", energy_transition_total)
-                episode_batch['e'] = energy_transition_total.reshape(-1, 1)
+                
+                # if difference from goal is greater when it started then when it ended than good episode
+                if total_diff_from_goal > 0:
+                    # print("Trajectory ended closer to target than it started for cycle count", self.cycle_count-1)
+                    # print("total_diff_from_goal", total_diff_from_goal)
+                    episode_batch['e'] = energy_transition_total.reshape(-1, 1)
+                    episode_batch['ed'] = 1
+                else:
+                    episode_batch['ed'] = 0
+                    episode_batch['e'] = energy_transition_total.reshape(-1, 1)
+
+                # episode_batch['e'] = energy_transition_total.reshape(-1, 1)
             elif self.env_name in ['HandManipulatePenRotate-v0',
                                    'HandManipulateEggFull-v0',
                                    'HandManipulateBlockFull-v0',
