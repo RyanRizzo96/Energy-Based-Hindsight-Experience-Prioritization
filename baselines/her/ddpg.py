@@ -121,7 +121,7 @@ class DDPG(object):
 
         buffer_size = (self.buffer_size // self.rollout_batch_size) * self.rollout_batch_size
 
-        print("begin init")
+        # print("begin init")
         if self.prioritization == 'energy':
             self.buffer = ReplayBufferEnergy(buffer_shapes, buffer_size, self.T, self.sample_transitions,
                                              self.prioritization, self.env_name)
@@ -133,7 +133,7 @@ class DDPG(object):
         else:
             self.buffer = ReplayBuffer(buffer_shapes, buffer_size, self.T, self.sample_transitions)
 
-        print("finish init")
+        # print("finish init")
 
     def _random_action(self, n):
         return np.random.uniform(low=-self.action_scale, high=self.action_scale, size=(n, self.dimu))
@@ -402,7 +402,7 @@ class DDPG(object):
         self.sess.run(self.init_target_net_op)
 
     def ddpg_update_target_net(self):
-        print("ddpg_cycle", self.cycle_count)
+        # print("ddpg_cycle", self.cycle_count)
         self.cycle_count += 1
         self.critic_loss_avg = np.mean(self.critic_loss_episode)
         self.actor_loss_avg = np.mean(self.actor_loss_episode)

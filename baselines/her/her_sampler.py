@@ -93,7 +93,7 @@ def make_sample_her_transitions_energy(replay_strategy, replay_k, reward_fun):
         # print("Inside her samlper1")
         logger = False
         if sample_count % 40 == 0:
-            logger = True
+            logger = False
             # print("Sampler cycle count", cycle_count)
         
         # if cycle_count == 1:
@@ -120,14 +120,11 @@ def make_sample_her_transitions_energy(replay_strategy, replay_k, reward_fun):
                         print(energy_direction, sample_count, cycle_count - 1)
                         print("Altering temperature to increase probability of sampling at index [", 
                               cycle_count-1, "]", energy_trajectory[cycle_count-1])
-                    temperature = 0.7
+                    temperature = 0.3
                 else:
                     temperature = 1
-                # 
-                # normalized_ed = energy_direction / np.sqrt(np.sum(energy_direction ** 2))
             else:
                 energy_trajectory = episode_batch['p']
-
             p_trajectory = np.power(energy_trajectory, 1 / (temperature + 1e-2))  # traj / 0.9900990099009901
             p_trajectory_sum = p_trajectory / p_trajectory.sum()
             

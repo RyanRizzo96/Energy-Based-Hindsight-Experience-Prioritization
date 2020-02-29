@@ -188,7 +188,7 @@ class ReplayBufferEnergy:
         """
         logger = False
         if self.sample_count % 40 == 0:
-            logger = True
+            logger = False
             # print("Enter Sample ----------------------------", self.cycle_count)
             
         buffers = {}
@@ -237,7 +237,7 @@ class ReplayBufferEnergy:
         for key in episode_batch.keys():
             buffers[key] = episode_batch[key]
             
-        print("Enter Store Episode ----------------------------", self.cycle_count)
+        # print("Enter Store Episode ----------------------------", self.cycle_count)
 
         if self.prioritization == 'energy':
             if self.env_name in ['FetchPickAndPlace-v1', 'FetchSlide-v1', 'FetchPush-v1', 'FetchReach-v1']:
@@ -280,14 +280,14 @@ class ReplayBufferEnergy:
                 
                 if 0.00001 > total_diff_from_goal > 0:
                     total_diff_from_goal = 0.00001
-                    print("total_diff_from_goal", total_diff_from_goal)
+                    # print("total_diff_from_goal", total_diff_from_goal)
                     # episode_batch['ed'] = total_diff_from_goal
                 elif 0 > total_diff_from_goal > -0.00001:
                     total_diff_from_goal = -0.00001
-                    print("total_diff_from_goal", total_diff_from_goal)
+                    # print("total_diff_from_goal", total_diff_from_goal)
                     # episode_batch['ed'] = total_diff_from_goal  
-                else: 
-                    print("total_diff_from_goal", total_diff_from_goal)
+                # else: 
+                    # print("total_diff_from_goal", total_diff_from_goal)
                     # episode_batch['ed'] = total_diff_from_goal.reshape(-1, 1)
                     
                 normalized_ed = total_diff_from_goal / np.sqrt(np.sum(total_diff_from_goal ** 2))
@@ -362,7 +362,7 @@ class ReplayBufferEnergy:
             energy_rank = energy_rank - 1
             energy_rank = energy_rank.reshape(-1, 1)
             self.buffers['d'][:self.current_size] = energy_rank.copy()
-            print("Exit Store Episode ----------------------------")
+            # print("Exit Store Episode ----------------------------")
 
     def get_current_episode_size(self):
         with self.lock:
