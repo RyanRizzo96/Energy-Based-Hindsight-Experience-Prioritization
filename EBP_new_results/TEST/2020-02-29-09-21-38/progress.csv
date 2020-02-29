@@ -1,0 +1,2 @@
+actor_critic/actor_loss,actor_critic/critic_loss,stats_g/mean,stats_g/std,stats_o/mean,stats_o/std,test/avg_episode_reward,test/episode,test/mean_Q_val,test/success_rate,train/avg_episode_reward,train/episode,train/success_rate
+1.6028229,0.07042759,0.86116123,0.105459094,0.2593269,0.03487961,-6.8,10.0,-0.13749291,1.0,-40.3,10.0,0.2

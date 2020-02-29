@@ -166,6 +166,9 @@ class ReplayBufferEnergy:
         self.prioritization = prioritization
         self.env_name = env_name
 
+        self.sample_count = 1
+        self.cycle_count = 1
+
         # memory management
         self.current_size = 0
         self.n_transitions_stored = 0
@@ -183,6 +186,11 @@ class ReplayBufferEnergy:
     def sample(self, batch_size, rank_method, temperature):
         """Returns a dict {key: array(batch_size x shapes[key])}
         """
+        logger = False
+        if self.sample_count % 40 == 0:
+            logger = True
+            # print("Enter Sample ----------------------------", self.cycle_count)
+            
         buffers = {}
 
         with self.lock:
@@ -194,13 +202,28 @@ class ReplayBufferEnergy:
         # print('ag', buffers['ag'])
         buffers['ag_2'] = buffers['ag'][:, 1:, :]
         # print('ag2', buffers['ag_2'])
+        
+        if logger:
+            print("Enter sample transition from replay buffer X 40")
+        # print("BUFFER", self.sample_count)
+        # print("Enter sample transition from replay buffer")
+        transitions = self.sample_transitions(buffers, batch_size, rank_method, temperature, self.sample_count, self.cycle_count)
+        
+        # print("buffer cycle:", cycle_count)
+        if logger:
+            print("buffer_cycle", self.cycle_count)
+            print("SAMPLE sample_count", self.sample_count)
+            self.cycle_count += 1
 
-        transitions = self.sample_transitions(buffers, batch_size, rank_method, temperature)
-
+        self.sample_count += 1
+        
         for key in (['r', 'o_2', 'ag_2'] + list(self.buffers.keys())):
             if not key == 'd' and not key == 'e' and not key == 'ed':
                 assert key in transitions, "key %s missing from transitions" % key
-
+               
+        # if logger: 
+            # print("Exit Sample ----------------------------")
+        
         return transitions
 
     def store_episode(self, episode_batch, w_potential, w_linear, w_rotational, rank_method, clip_energy):
@@ -213,6 +236,8 @@ class ReplayBufferEnergy:
         buffers = {}
         for key in episode_batch.keys():
             buffers[key] = episode_batch[key]
+            
+        print("Enter Store Episode ----------------------------", self.cycle_count)
 
         if self.prioritization == 'energy':
             if self.env_name in ['FetchPickAndPlace-v1', 'FetchSlide-v1', 'FetchPush-v1', 'FetchReach-v1']:
@@ -253,24 +278,29 @@ class ReplayBufferEnergy:
                 # if total_diff_from_goal < 0.00001:
                 #     total_diff_from_goal = 0
                 
-                if total_diff_from_goal < 0.000001:
-                    total_diff_from_goal = 0.000001
-                    # print("total_diff_from_goal", total_diff_from_goal)
-                    episode_batch['ed'] = total_diff_from_goal
-                
+                if 0.00001 > total_diff_from_goal > 0:
+                    total_diff_from_goal = 0.00001
+                    print("total_diff_from_goal", total_diff_from_goal)
+                    # episode_batch['ed'] = total_diff_from_goal
+                elif 0 > total_diff_from_goal > -0.00001:
+                    total_diff_from_goal = -0.00001
+                    print("total_diff_from_goal", total_diff_from_goal)
+                    # episode_batch['ed'] = total_diff_from_goal  
                 else: 
-                    # print("total_diff_from_goal", total_diff_from_goal)
-                    episode_batch['ed'] = total_diff_from_goal.reshape(-1, 1)
+                    print("total_diff_from_goal", total_diff_from_goal)
+                    # episode_batch['ed'] = total_diff_from_goal.reshape(-1, 1)
                     
                 normalized_ed = total_diff_from_goal / np.sqrt(np.sum(total_diff_from_goal ** 2))
                 # print("normalized_ed", normalized_ed)Z
-                    
-                
-                # if difference from goal is greater when it started then when it ended than good episode
-                # if to tal_diff_from_goal > 0:
-                    # print("Transition ended closer to target than it started")
 
-                # print("diff", diff)
+                # if difference from goal is greater when it started then when it ended than good episode
+                if total_diff_from_goal > 0:
+                    # print("Trajectory ended closer to target than it started for cycle count", cycle_count)
+                    episode_batch['ed'] = 1
+                else:
+                    episode_batch['ed'] = 0
+
+                    # print("diff", diff)
                 velocity = diff / delta_t
                 kinetic_energy = 0.5 * m * np.power(velocity, 2)
                 kinetic_energy = np.sum(kinetic_energy, axis=2)
@@ -332,6 +362,7 @@ class ReplayBufferEnergy:
             energy_rank = energy_rank - 1
             energy_rank = energy_rank.reshape(-1, 1)
             self.buffers['d'][:self.current_size] = energy_rank.copy()
+            print("Exit Store Episode ----------------------------")
 
     def get_current_episode_size(self):
         with self.lock:
@@ -476,7 +507,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
                 file.write(json.dumps(entry))  # use `json.loads` to do the reverse
                 file.write("\n")
 
-        print("dump buffer")
+        print("dump buffer ----------------------------")
 
     def sample(self, batch_size, beta):
         """Returns a dict {key: array(batch_size x shapes[key])}
