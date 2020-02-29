@@ -115,17 +115,17 @@ def make_sample_her_transitions_energy(replay_strategy, replay_k, reward_fun):
                 energy_direction = episode_batch['ed']
                 # print("Inside her samlper")
                 # print(energy_direction, sample_count, cycle_count-1)
-                if energy_direction[cycle_count-1] == 1:
-                    if logger:
-                        print(energy_direction, sample_count, cycle_count - 1)
-                        print("Altering temperature to increase probability of sampling at index [", 
-                              cycle_count-1, "]", energy_trajectory[cycle_count-1])
-                    temperature = 0.3
-                else:
-                    temperature = 1
+                # if energy_direction[cycle_count-1] == 1:
+                #     if logger:
+                #         print(energy_direction, sample_count, cycle_count - 1)
+                #         print("Altering temperature to increase probability of sampling at index [", 
+                #               cycle_count-1, "]", energy_trajectory[cycle_count-1])
+                #     temperature = 0.3
+                # else:
+                #     temperature = 1
             else:
                 energy_trajectory = episode_batch['p']
-            p_trajectory = np.power(energy_trajectory, 1 / (temperature + 1e-2))  # traj / 0.9900990099009901
+            p_trajectory = np.power(energy_trajectory, 1 / (0.65 + 1e-2))  # traj / 0.9900990099009901
             p_trajectory_sum = p_trajectory / p_trajectory.sum()
             
             # p_trajectory_new = np.power(energy_trajectory + normalized_ed, 1 / (temperature + 1e-2))  # traj / 
@@ -141,7 +141,7 @@ def make_sample_her_transitions_energy(replay_strategy, replay_k, reward_fun):
                 print("en traj", episode_batch['e'])
                 print("p_trajectory", p_trajectory)
                 print("p_trajectory_sum", p_trajectory_sum)
-                print("energy_direction", energy_direction)
+                # print("energy_direction", energy_direction)
                 print("Cycle count:", cycle_count-1)
                 # print("normalized_ed", normalized_ed)
 

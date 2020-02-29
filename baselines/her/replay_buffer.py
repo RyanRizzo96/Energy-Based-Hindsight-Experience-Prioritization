@@ -211,8 +211,8 @@ class ReplayBufferEnergy:
         
         # print("buffer cycle:", cycle_count)
         if logger:
-            print("buffer_cycle", self.cycle_count)
-            print("SAMPLE sample_count", self.sample_count)
+            # print("buffer_cycle", self.cycle_count)
+            # print("SAMPLE sample_count", self.sample_count)
             self.cycle_count += 1
 
         self.sample_count += 1
@@ -295,7 +295,7 @@ class ReplayBufferEnergy:
 
                 # if difference from goal is greater when it started then when it ended than good episode
                 if total_diff_from_goal > 0:
-                    # print("Trajectory ended closer to target than it started for cycle count", cycle_count)
+                    # print("Trajectory ended closer to target than it started for cycle count", self.cycle_count-1)
                     episode_batch['ed'] = 1
                 else:
                     episode_batch['ed'] = 0
