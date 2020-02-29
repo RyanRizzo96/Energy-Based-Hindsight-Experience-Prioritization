@@ -293,7 +293,7 @@ class ReplayBufferEnergy:
                     # print("total_diff_from_goal", total_diff_from_goal)
                     # episode_batch['ed'] = total_diff_from_goal.reshape(-1, 1)
                     
-                normalized_ed = total_diff_from_goal / np.sqrt(np.sum(total_diff_from_goal ** 2))
+                # normalized_ed = total_diff_from_goal / np.sqrt(np.sum(total_diff_from_goal ** 2))
                 # print("diff", diff)
 
                 velocity = diff / delta_t
