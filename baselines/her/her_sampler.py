@@ -119,7 +119,7 @@ def make_sample_her_transitions_energy(replay_strategy, replay_k, reward_fun):
                     if logger:
                         # print(energy_direction, sample_count, cycle_count - 1)
                         # print("We must increase probability of sampling at index [", 
-                        #       cycle_count-1, "]", energy_trajectory[cycle_count-1])
+                        #        cycle_count-1, "]", energy_trajectory[cycle_count-1])
                         max_energy = np.max(energy_trajectory)
                         # print("max", max_energy)
                         energy_trajectory[cycle_count - 1] = max_energy
@@ -127,7 +127,7 @@ def make_sample_her_transitions_energy(replay_strategy, replay_k, reward_fun):
                         #       energy_trajectory[cycle_count-1])
             else:
                 energy_trajectory = episode_batch['p']
-            p_trajectory = np.power(energy_trajectory, 1 / (0.65 + 1e-2))  
+            p_trajectory = np.power(energy_trajectory, 1 / (1 + 1e-2))
             p_trajectory_sum = p_trajectory / p_trajectory.sum()
             
             # p_trajectory_new = np.power(energy_trajectory + normalized_ed, 1 / (temperature + 1e-2))  # traj / 
