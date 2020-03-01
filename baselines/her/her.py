@@ -122,7 +122,7 @@ def learn(*, network, env, total_timesteps,
           override_params=None,
           load_path=None,
           save_path=None,
-          temperature=0.65,
+          temperature=1,
           prioritization='energy',
           dump_buffer=False,
           rank_method='none', w_potential=1.0, w_linear=1.0, w_rotational=1.0, clip_energy=999,
@@ -175,7 +175,7 @@ def learn(*, network, env, total_timesteps,
     # Creates gym env, checks MPI rank, monitor initialization
     params = config.prepare_params(params)
     # params['rollout_batch_size'] = env.num_envs  # Not sure about this. Does this override the value in config.py?
-    params['rollout_batch_size'] = env.num_envs
+    params['rollout_batch_size'] = 4
     print("rr/ env.num_envs =  ", env.num_envs)
 
     if demo_file is not None:

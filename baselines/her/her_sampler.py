@@ -115,9 +115,11 @@ def make_sample_her_transitions_energy(replay_strategy, replay_k, reward_fun):
                 energy_direction = episode_batch['ed']
                 # print("Inside her samlper")
                 # print(energy_direction, sample_count, cycle_count-1)
+                
                 if energy_direction[cycle_count-1] == 1:
                     if logger:
-                        # print(energy_direction, sample_count, cycle_count - 1)
+                        # print("en traj before", episode_batch['e'])
+                        # # print(energy_direction, sample_count, cycle_count - 1)
                         # print("We must increase probability of sampling at index [", 
                         #        cycle_count-1, "]", energy_trajectory[cycle_count-1])
                         max_energy = np.max(energy_trajectory)
@@ -127,7 +129,7 @@ def make_sample_her_transitions_energy(replay_strategy, replay_k, reward_fun):
                         #       energy_trajectory[cycle_count-1])
             else:
                 energy_trajectory = episode_batch['p']
-            p_trajectory = np.power(energy_trajectory, 1 / (1 + 1e-2))
+            p_trajectory = np.power(energy_trajectory, 0.2 / (1 + 1e-2))
             p_trajectory_sum = p_trajectory / p_trajectory.sum()
             
             # p_trajectory_new = np.power(energy_trajectory + normalized_ed, 1 / (temperature + 1e-2))  # traj / 
@@ -140,12 +142,11 @@ def make_sample_her_transitions_energy(replay_strategy, replay_k, reward_fun):
             episode_idxs = episode_idxs_energy
 
             # if logger:
-                # print("en traj", episode_batch['e'])
-                # print("p_trajectory", p_trajectory)
-                # print("p_trajectory_sum", p_trajectory_sum)
-                # print("energy_direction", energy_direction)
-                # print("Cycle count:", cycle_count-1)
-                # print("normalized_ed", normalized_ed)
+            #     print("energy_direction", energy_direction)
+            #     print("en traj after", episode_batch['e'])
+            #     print("p_trajectory", p_trajectory)
+            #     print("p_trajectory_sum", p_trajectory_sum)
+            #     print("Cycle count:", cycle_count-1)
 
             if sample_count > 0:
                 sample_count += 1
