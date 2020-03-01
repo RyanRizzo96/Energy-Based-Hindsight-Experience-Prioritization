@@ -1,4 +1,4 @@
-≈#!/usr/bin/env bash
+#!/usr/bin/env bash
 source ~/.virtualenvs/baseline_env/bin/activate
 echo $HOME
 
