@@ -256,8 +256,8 @@ class ReplayBufferEnergy:
     
                 # Obtaining first and last achieved goals
                 first_ag = buffers['ag'][0][0]               
-                # print("first_ag", first_ag)
                 last_ag = buffers['ag'][0][49] 
+                # print("first_ag", first_ag)
                 # print("last_ag", last_ag)
 
                 diff_first_ag = first_ag - dg   # Subtracting first achieved goal by desired goal
@@ -278,7 +278,9 @@ class ReplayBufferEnergy:
                 # print("normalized_diff_end", normalized_diff_end)
 
                 total_diff_from_goal = total_diff_start - total_diff_end
-                # if total_diff_from_goal < 0.00001:
+                # print("total_diff_from_goal", total_diff_from_goal)
+                # print("-----------------------------")
+                
                 #     total_diff_from_goal = 0
                 
                 if 0.00001 > total_diff_from_goal > 0:
