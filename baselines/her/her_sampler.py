@@ -1,4 +1,5 @@
 import numpy as np
+from mpi4py import MPI
 
 
 def make_sample_her_transitions(replay_strategy, replay_k, reward_fun):
@@ -132,7 +133,7 @@ def make_sample_her_transitions_energy(replay_strategy, replay_k, reward_fun):
                         #     print("Already at max energy")
             else:
                 energy_trajectory = episode_batch['p']
-            p_trajectory = np.power(energy_trajectory, 1 / (1 + 1e-2))
+            p_trajectory = np.power(energy_trajectory, 0.65 / (1 + 1e-2))
             p_trajectory_sum = p_trajectory / p_trajectory.sum()
             
             # p_trajectory_new = np.power(energy_trajectory + normalized_ed, 1 / (temperature + 1e-2))  # traj / 
