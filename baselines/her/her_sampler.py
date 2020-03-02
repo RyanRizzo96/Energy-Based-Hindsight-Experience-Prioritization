@@ -125,8 +125,14 @@ def make_sample_her_transitions_energy(replay_strategy, replay_k, reward_fun):
                         #       cycle_count-1, "]", energy_trajectory[cycle_count-1])
                         max_energy = np.max(energy_trajectory)
                         if energy_trajectory[cycle_count - 1] < max_energy:
+
+                            # METHOD 1
+                            # energy_trajectory[cycle_count - 1] = max_energy
+
+                            # METHOD 2
+                            increased_avg_energy = (max_energy + energy_trajectory[cycle_count - 1]) / 2
                             # print("max", max_energy)
-                            energy_trajectory[cycle_count - 1] = max_energy
+                            energy_trajectory[cycle_count - 1] = increased_avg_energy
                             # print("Now probability is of sampling at index [", cycle_count-1, "]",
                             #       energy_trajectory[cycle_count-1])
                         # else:
@@ -146,10 +152,9 @@ def make_sample_her_transitions_energy(replay_strategy, replay_k, reward_fun):
             episode_idxs = episode_idxs_energy
 
             # if logger:
-            #     print("energy_direction", energy_direction)
-            #     print("en traj after", episode_batch['e'])
-            #     print("p_trajectory", p_trajectory)
-            #     print("p_trajectory_sum", p_trajectory_sum)
+                # print("en traj after", episode_batch['e'])
+                # print("p_trajectory", p_trajectory)
+                # print("p_trajectory_sum", p_trajectory_sum)
             #     print("Cycle count:", cycle_count-1)
 
             if sample_count > 0:
