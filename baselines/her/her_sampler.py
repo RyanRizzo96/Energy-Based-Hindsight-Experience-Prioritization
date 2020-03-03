@@ -127,12 +127,12 @@ def make_sample_her_transitions_energy(replay_strategy, replay_k, reward_fun):
                         if energy_trajectory[cycle_count - 1] < max_energy:
 
                             # METHOD 1
-                            energy_trajectory[cycle_count - 1] = max_energy
+                            # energy_trajectory[cycle_count - 1] = max_energy
 
                             # METHOD 2
-                            # increased_avg_energy = (max_energy + energy_trajectory[cycle_count - 1]) / 2
+                            increased_avg_energy = (max_energy + energy_trajectory[cycle_count - 1]) / 2
                             # print("max", max_energy)
-                            # energy_trajectory[cycle_count - 1] = increased_avg_energy
+                            energy_trajectory[cycle_count - 1] = increased_avg_energy
                             # print("Now probability is of sampling at index [", cycle_count-1, "]",
                             #       energy_trajectory[cycle_count-1])
                         # else:
