@@ -118,7 +118,7 @@ def make_sample_her_transitions_energy(replay_strategy, replay_k, reward_fun):
                 # print(energy_direction, sample_count, cycle_count-1)
 
                 if logger:  # Every cycle
-                    if energy_direction[cycle_count-1] == 1:    
+                    if energy_direction[cycle_count-1] == 1:
                         # print("en traj before", episode_batch['e'])
                         # print(energy_direction, sample_count, cycle_count - 1)
                         # print("We must increase probability of sampling at index [",
@@ -127,19 +127,19 @@ def make_sample_her_transitions_energy(replay_strategy, replay_k, reward_fun):
                         if energy_trajectory[cycle_count - 1] < max_energy:
 
                             # METHOD 1
-                            energy_trajectory[cycle_count - 1] = max_energy
+                            # energy_trajectory[cycle_count - 1] = max_energy
 
                             # METHOD 2
-                            # increased_avg_energy = (max_energy + energy_trajectory[cycle_count - 1]) / 2
+                            increased_avg_energy = (max_energy + energy_trajectory[cycle_count - 1]) / 2
                             # print("max", max_energy)
-                            # energy_trajectory[cycle_count - 1] = increased_avg_energy
+                            energy_trajectory[cycle_count - 1] = increased_avg_energy
                             # print("Now probability is of sampling at index [", cycle_count-1, "]",
                             #       energy_trajectory[cycle_count-1])
                         # else:
                         #     print("Already at max energy")
             else:
                 energy_trajectory = episode_batch['p']
-            p_trajectory = np.power(energy_trajectory, 1 / (1 + 1e-2))
+            p_trajectory = np.power(energy_trajectory, 1 / (0.5 + 1e-2))
             p_trajectory_sum = p_trajectory / p_trajectory.sum()
             
             # p_trajectory_new = np.power(energy_trajectory + normalized_ed, 1 / (temperature + 1e-2))  # traj / 
