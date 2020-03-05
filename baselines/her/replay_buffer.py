@@ -284,11 +284,11 @@ class ReplayBufferEnergy:
                 #     total_diff_from_goal = 0
                 
                 if 0.00001 > total_diff_from_goal > 0:
-                    total_diff_from_goal = 0.00001
+                    total_diff_from_goal = 0
                     # print("total_diff_from_goal", total_diff_from_goal)
                     # episode_batch['ed'] = total_diff_from_goal
                 elif 0 > total_diff_from_goal > -0.00001:
-                    total_diff_from_goal = -0.00001
+                    total_diff_from_goal = 0
                     # print("total_diff_from_goal", total_diff_from_goal)
                     # episode_batch['ed'] = total_diff_from_goal  
                 # else: 
@@ -347,6 +347,10 @@ class ReplayBufferEnergy:
                 energy_transition = np.clip(energy_transition, 0, clip_energy)
                 energy_transition_total = np.sum(energy_transition, axis=1)
                 episode_batch['e'] = energy_transition_total.reshape(-1, 1)
+                
+                
+                
+                
         else:
             print('Trajectory Energy Function Not Implemented')
             exit()
