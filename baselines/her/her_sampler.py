@@ -117,26 +117,26 @@ def make_sample_her_transitions_energy(replay_strategy, replay_k, reward_fun):
                 # print("Inside her samlper")
                 # print(energy_direction, sample_count, cycle_count-1)
 
-                if logger:  # Every cycle
-                    if energy_direction[cycle_count-1] == 1:
-                        # print("en traj before", episode_batch['e'])
-                        # print(energy_direction, sample_count, cycle_count - 1)
-                        # print("We must increase probability of sampling at index [",
-                        #       cycle_count-1, "]", energy_trajectory[cycle_count-1])
-                        max_energy = np.max(energy_trajectory)
-                        if energy_trajectory[cycle_count - 1] < max_energy:
-
-                            # METHOD 1
-                            # energy_trajectory[cycle_count - 1] = max_energy
-
-                            # METHOD 2
-                            increased_avg_energy = (max_energy + energy_trajectory[cycle_count - 1]) / 2
-                            # print("max", max_energy)
-                            energy_trajectory[cycle_count - 1] = increased_avg_energy
-                            # print("Now probability is of sampling at index [", cycle_count-1, "]",
-                            #       energy_trajectory[cycle_count-1])
-                        # else:
-                        #     print("Already at max energy")
+                # if logger:  # Every cycle
+                #     if energy_direction[cycle_count-1] == 1:
+                #         # print("en traj before", episode_batch['e'])
+                #         # print(energy_direction, sample_count, cycle_count - 1)
+                #         # print("We must increase probability of sampling at index [",
+                #         #       cycle_count-1, "]", energy_trajectory[cycle_count-1])
+                #         max_energy = np.max(energy_trajectory)
+                #         if energy_trajectory[cycle_count - 1] < max_energy:
+                #
+                #             # METHOD 1
+                #             # energy_trajectory[cycle_count - 1] = max_energy
+                #
+                #             # METHOD 2
+                #             increased_avg_energy = (max_energy + energy_trajectory[cycle_count - 1]) / 2
+                #             # print("max", max_energy)
+                #             energy_trajectory[cycle_count - 1] = increased_avg_energy
+                #             # print("Now probability is of sampling at index [", cycle_count-1, "]",
+                #             #       energy_trajectory[cycle_count-1])
+                #         # else:
+                #         #     print("Already at max energy")
             else:
                 energy_trajectory = episode_batch['p']
             p_trajectory = np.power(energy_trajectory, 1 / (1 + 1e-2))
