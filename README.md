@@ -1,5 +1,7 @@
 # Energy-Based-Prioritization
 
+Supported by the AWS Cloud Credits for Research program.
+
 Comparison betwween Hindsight Experience Replay and Energy-Based Hindisght Experience Prioritization, averaged across 5 random seeds each, trained on 16 CPUs. (1 epoch = 40,000 iterations)
 
 Results improve on state-of-the-art HER implementation by Andrychowiz et.al. (2017)
