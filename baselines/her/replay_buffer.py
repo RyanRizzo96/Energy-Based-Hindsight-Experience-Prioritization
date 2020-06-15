@@ -347,10 +347,7 @@ class ReplayBufferEnergy:
                 energy_transition = np.clip(energy_transition, 0, clip_energy)
                 energy_transition_total = np.sum(energy_transition, axis=1)
                 episode_batch['e'] = energy_transition_total.reshape(-1, 1)
-                
-                
-                
-                
+
         else:
             print('Trajectory Energy Function Not Implemented')
             exit()

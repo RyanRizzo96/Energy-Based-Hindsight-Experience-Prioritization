@@ -9,6 +9,7 @@ export OPENAI_LOG_FORMAT=stdout,log,csv,tensorboard
 # for seed in $(seq 2 4); do OPENAI_LOGDIR=/home/ubuntu/Energy-Based-Prioritization/EBP_mod/Fetch-PickAndPlace/Method1/temp0.65-$seed mpirun -np 16 python3 -m baselines.run --alg=her --env=FetchPickAndPlace-v1 --num_timesteps=100000 --seed=$seed; done
 # for seed in $(seq 0 2); do OPENAI_LOGDIR=/home/ubuntu/Energy-Based-Prioritization/EBP_mod/Fetch-PickAndPlace/Method2/temp0.65/run2-$seed mpirun -np 16 python3 -m baselines.run --alg=her --env=FetchPickAndPlace-v1 --num_timesteps=100000 --seed=$seed; done
 
+<<<<<<< HEAD
 # for seed in $(seq 0 2); do \
 # OPENAI_LOGDIR=/home/ubuntu/Energy-Based-Prioritization/EBP_mod/FetchSlide/Method3/temp1/trial-$seed mpirun -np 16 \
 # python3 -m baselines.run --alg=her --env=FetchSlide-v1 --num_timesteps=200000 \
@@ -17,6 +18,16 @@ export OPENAI_LOG_FORMAT=stdout,log,csv,tensorboard
 python3 -m baselines.run --alg=her --env=FetchReach-v1 --num_timesteps=1000 --save_path=~/models/thesis_demo/run2
 
 #python3 -m baselines.run --alg=her --env=FetchReach-v1 --num_timesteps=0 --load_path=~/models/thesis_demo/run2 --play
+=======
+#for seed in $(seq 0 2); do \
+#OPENAI_LOGDIR=/home/ubuntu/Energy-Based-Prioritization/EBP_mod/FetchSlide/Method3/temp1/trial-$seed mpirun -np 16 \
+#python3 -m baselines.run --alg=her --env=FetchSlide-v1 --num_timesteps=200000 \
+#--save_path=/home/ubuntu/Energy-Based-Prioritization/EBP_policy/FetchSlide/Method3/temp1/trial-$seed --seed=$seed; done
+
+#for seed in $(seq 0 4); do \
+#OPENAI_LOGDIR=/home/ubuntu/Energy-Based-Prioritization/EBP_mod/FetchPush/Method3/temp0.7/trial-$seed mpirun -np 16 \
+python3 -m baselines.run --alg=her --env=HandReach-v0 --num_timesteps=50000
+>>>>>>> 0da4137001f6cda558fd4b1707f8f5d51f994f73
 
 #--save_path=/Users/ryanr/Desktop/MCAST_Degree_4/Results/Policies/FetchReach/HER_correct/trial-$seed --seed=$seed; done
 
